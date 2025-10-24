@@ -114,3 +114,107 @@ def cross_validation(data, folds):
         dataset_split.append(fold)
     return dataset_split
     
+
+# Evaluation metrics
+
+def accuracy_metric(actual, predicted):
+    correct = 0
+    for label, prediction in  zip(actual, predicted):
+        if label == prediction:
+            correct += 1
+    return (correct/len(actual))*100
+
+
+
+def confusion_matrix(actual, predicted):
+    unique = set(actual)
+    matrix = [ list() for x in range(len(unique)) ]
+    for i in range(len(unique)):
+        matrix[i] = [ 0 for x in range(len(unique)) ]
+
+    lookup = dict()
+
+    for i, value in enumerate(unique):
+        lookup[value] = i
+
+    for i in range(len(actual)):
+        x = lookup[actual[i]]
+        y = lookup[predicted[i]]
+
+        matrix[y][x] += 1
+
+    print('(A)'+ ' '.join(str(x) for x in unique))
+    print( '(P)---------------' )
+    for i, x in enumerate(unique):
+        print("%s| %s"%(x, " ".join(str(x) for x in matrix[i])))
+    
+    # return unique, matrix
+
+
+def mae_metric(actual, predicted):
+    sum_error = 0.0
+    for a, p in zip(actual, predicted):
+        sum_error += abs(a-p)
+
+    return sum_error/float(len(actual))
+
+
+def rmse_metric(actual, predicted):
+    sum_error = 0
+    for i in range(len(actual)):
+        sum_error = sum_error + (actual[i]- predicted[i])**2
+    mean_error = sum_error/len(actual)
+
+    return sqrt(mean_error)
+
+def precision_metric_binary(actual, predicted):
+    true_positives = 0
+    false_positives =0
+    for i in range(len(actual)):
+        if actual[i] == predicted[i] and actual[i] == 1:
+            true_positives += 1
+        elif actual[i] != predicted[i] and predicted[i] == 1:
+            false_positives += 1
+        else:
+            pass
+            
+    return true_positives/ ( true_positives + false_positives )
+        
+def precision_metric_categorical(actual, predicted, method):
+    unique = set(actual)
+    true_positives = [ 0 for x in range(len(unique)) ]
+    false_positives = [ 0 for x in range(len(unique)) ]
+    precisions = [ 0 for x in range(len(unique)) ]
+    lookup = dict()
+        
+    for i, v in enumerate(unique):
+        lookup[v] = i
+    for i in range(len(actual)):
+        if actual[i] == predicted[i]:
+            index = lookup[actual[i]]
+            true_positives[index] += 1
+        else:
+            index = lookup[predicted[i]]
+            false_positives[index] += 1
+
+    for v in unique:
+        prec = true_positives[lookup[v]]/(true_positives[lookup[v]] + false_positives[lookup[v]])
+        precisions[lookup[v]] = prec
+    # print(precisions)
+    
+    if method=="macro":
+        return sum(precisions)/len(unique)
+        
+    elif method == "weighted":
+        weighted_precision_sum = 0
+        for label in unique:
+            number_of_labels = actual.count(label)
+            weighted_precision_sum += (number_of_labels*precisions[lookup[label]])
+        total_samples = sum(actual.count(label) for label in unique)
+        return weighted_precision_sum/total_samples
+
+    elif method == "micro":
+        sum_of_true_positives = sum(true_positives)
+        sum_of_false_positives = sum(false_positives)
+        return sum_of_true_positives/(sum_of_true_positives+sum_of_false_positives)
+    
