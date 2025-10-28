@@ -218,3 +218,61 @@ def precision_metric_categorical(actual, predicted, method):
         sum_of_false_positives = sum(false_positives)
         return sum_of_true_positives/(sum_of_true_positives+sum_of_false_positives)
     
+
+## Baseline Models
+
+def random_algorithm(train, test):
+    output_values = [ row[-1] for row in train ]
+    unique = list(set(output_values))
+    predicted = list()
+    for i in range(len(test)):
+        index = randrange(len(unique))
+        predicted.append(unique[index])
+    return predicted
+
+def zero_rule_algorithm_classification(train,test):
+    output_values = [ row[-1] for row in train ]
+    prediction = max(set(output_values), key=output_values.count)
+    # print(prediction)
+    predicted = [ prediction for i in range(len(test)) ]
+    return predicted
+
+def zero_rule_algorithm_regression_mean(train, test):
+    output_values = [ row[-1] for row in train ]
+    prediction = sum(output_values)/float(len(output_values))
+    predicted = [ prediction for i in range(len(test)) ]
+    return predicted
+
+
+def zero_rule_algorithm_regression_median(train, test):
+    output_values = [ row[-1] for row in train ]
+    output_values = sorted(output_values)
+    if len(output_values)%2 == 0:
+        index1 = int(len(output_values)/2) -1
+        index2 = int(len(output_values)/2)
+        median = (output_values[index1] + output_values[index2])/2
+        return median
+    index = int(len(output_values)/2)
+    return output_values[index]
+
+def zero_rule_algorithm_regression_mode(train, test):
+    output_values = [ row[-1] for row in train ]
+    unique_values = list(set(output_values))
+    
+    mode = unique_values[0]
+    count = output_values.count(mode)
+
+    for v in unique_values:
+        c = output_values.count(v)
+        if c > count:
+            mode = v
+            count = c
+    return mode
+
+def zero_rule_algorithm_regression_moving_average(data, window_size):
+    predictions = list()
+    for i in range(window_size,len(data)+1):
+        window = data[i-window_size: i]
+        predictions.append( sum(window)/float(window_size) )
+    return predictions
+
